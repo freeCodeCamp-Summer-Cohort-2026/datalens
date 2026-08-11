@@ -52,3 +52,29 @@ def test_negative_revenue_tolerance_is_rejected():
     df = pd.DataFrame({"quantity": [1], "unit_price": [5.0], "revenue": [5.0]})
     with pytest.raises(ValueError, match="non-negative"):
         find_data_quality_issues(df, tolerance=-0.01)
+def test_missing_quantity_is_reported():
+    df = pd.DataFrame({"quantity": [None], "unit_price": [5.0], "revenue": [5.0]})
+    result = find_data_quality_issues(df)
+    assert result.loc[0, "issues"] == ["missing_quantity"]
+
+
+def test_missing_unit_price_is_reported():
+    df = pd.DataFrame({"quantity": [1], "unit_price": [None], "revenue": [5.0]})
+    result = find_data_quality_issues(df)
+    assert result.loc[0, "issues"] == ["missing_unit_price"]
+
+
+def test_missing_revenue_is_reported():
+    df = pd.DataFrame({"quantity": [1], "unit_price": [5.0], "revenue": [None]})
+    result = find_data_quality_issues(df)
+    assert result.loc[0, "issues"] == ["missing_revenue"]
+
+
+def test_multiple_missing_required_values_are_reported():
+    df = pd.DataFrame({"quantity": [None], "unit_price": [None], "revenue": [None]})
+    result = find_data_quality_issues(df)
+    assert result.loc[0, "issues"] == [
+        "missing_quantity",
+        "missing_unit_price",
+        "missing_revenue",
+    ]
