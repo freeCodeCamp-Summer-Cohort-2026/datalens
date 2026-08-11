@@ -22,12 +22,21 @@ def find_data_quality_issues(
         raise ValueError(f"Missing required columns: {sorted(missing)}")
     if tolerance < 0:
         raise ValueError("Revenue tolerance must be non-negative")
+    missing_quantity = df["quantity"].isna()
+    missing_unit_price = df["unit_price"].isna()
+    missing_revenue = df["revenue"].isna()
+    complete_revenue_inputs = ~(
+        missing_quantity | missing_unit_price | missing_revenue
+    )
     difference = (df["revenue"] - df["quantity"] * df["unit_price"]).abs()
     matches = difference <= tolerance
     checks = pd.DataFrame({
+        "missing_quantity": missing_quantity,
+        "missing_unit_price": missing_unit_price,
+        "missing_revenue": missing_revenue,
         "negative_quantity": df["quantity"] < 0,
         "negative_revenue": df["revenue"] < 0,
-        "revenue_mismatch": ~matches,
+        "revenue_mismatch": complete_revenue_inputs & ~matches,
     }, index=df.index)
     issues = checks.apply(
         lambda row: [name for name, failed in row.items() if failed], axis=1
