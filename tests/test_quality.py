@@ -57,7 +57,7 @@ def test_negative_revenue_tolerance_is_rejected():
 def test_negative_unit_price_is_reported():
     df = pd.DataFrame({"quantity": [1], "unit_price": [-5.0], "revenue": [5.0]})
     result = find_data_quality_issues(df)
-    assert result.loc[0, "issues"] == ["negative_unit_price"]
+    assert result.loc[0, "issues"] == ["negative_unit_price", "revenue_mismatch"]
         
         
 def test_missing_quantity_is_reported():
