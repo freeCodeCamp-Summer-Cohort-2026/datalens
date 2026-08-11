@@ -59,6 +59,35 @@ datalens clean data/sample.csv --output cleaned.csv --missing-strategy drop
 Run `datalens --help` or `datalens <command> --help` for the full option
 list.
 
+## Getting Started 
+
+If we were to run the first command of the CLI usage section (`datalens summarize data/sample.csv`), the command will summarise the data within out `sample.csv` file which is in the data directory. 
+
+In this case, when we run the command, the output will show:
+
+- row_count (the number of rows)
+- columns (the name of each column in a list)
+- total_revenue (all the individual revenue entries added together)
+- mean_revenue (the total revenue divided by how many revenue entries there are)
+- category_count (tells the user how many categories the data set contains)
+- date_min (tells us the date the first sale was made within the data set)
+- date_max (tells us the date when the latest sale was made within the data set)
+
+Specifically, running the command on `sample.csv`, the results should outputted to the terminal. These results should be obtained:
+
+```bash
+DataLens summary
+=================
+row_count: 816
+columns: ['date', 'store', 'category', 'item', 'quantity', 'unit_price', 'revenue']
+total_revenue: 19734.43
+mean_revenue: 24.184350490196078
+total_quantity: 2791.0
+category_count: 5
+date_min: 2026-01-01
+date_max: 2026-06-30
+```
+
 ## Regenerating the sample dataset
 
 ```bash
