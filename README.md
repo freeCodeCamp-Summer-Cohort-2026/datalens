@@ -61,7 +61,7 @@ list.
 
 ## Getting Started 
 
-If we were to run the first command of the CLI usage section (`datalens summarize data/sample.csv`), the command will summarise the data within out `sample.csv` file which is in the data directory. 
+If we were to run the first command of the CLI usage section (`datalens summarize data/sample.csv`), the command will summarise the data within our `sample.csv` file which is in the data directory. 
 
 In this case, when we run the command, the output will show:
 
@@ -69,11 +69,12 @@ In this case, when we run the command, the output will show:
 - columns (the name of each column in a list)
 - total_revenue (all the individual revenue entries added together)
 - mean_revenue (the total revenue divided by how many revenue entries there are)
+- total_quantity (tells the user how many items are being sold in that data set)
 - category_count (tells the user how many categories the data set contains)
 - date_min (tells us the date the first sale was made within the data set)
 - date_max (tells us the date when the latest sale was made within the data set)
 
-Specifically, running the command on `sample.csv`, the results should outputted to the terminal. These results should be obtained:
+Specifically, running the command on `sample.csv`, the results should output to the terminal. These results should be obtained:
 
 ```bash
 DataLens summary
