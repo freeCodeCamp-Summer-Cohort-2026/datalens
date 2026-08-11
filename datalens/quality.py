@@ -31,9 +31,10 @@ def find_data_quality_issues(
     # Check for revenue mismatch beyond aboslute tolerance
     revenue_mismatch = ~(missing_quantity | missing_unit_price | missing_revenue) & ((df["revenue"] - df["quantity"] * df["unit_price"]).abs() > tolerance)
     
-    # Check for negative quantity or revenue values
+    # Check for negative quantity, unit_price or revenue values
     negative_quantity = df["quantity"] < 0
     negative_revenue = df["revenue"] < 0
+    negative_unit_price = df["unit_price"] < 0
     
     # Combine all checks into a single mask
     checks = {
@@ -42,6 +43,7 @@ def find_data_quality_issues(
         "missing_revenue": missing_revenue,
         "negative_quantity": negative_quantity,
         "negative_revenue": negative_revenue,
+        "negative_unit_price": negative_unit_price,
         "revenue_mismatch": revenue_mismatch,
     }
     
