@@ -52,6 +52,8 @@ def test_negative_revenue_tolerance_is_rejected():
     df = pd.DataFrame({"quantity": [1], "unit_price": [5.0], "revenue": [5.0]})
     with pytest.raises(ValueError, match="non-negative"):
         find_data_quality_issues(df, tolerance=-0.01)
+        
+        
 def test_missing_quantity_is_reported():
     df = pd.DataFrame({"quantity": [None], "unit_price": [5.0], "revenue": [5.0]})
     result = find_data_quality_issues(df)

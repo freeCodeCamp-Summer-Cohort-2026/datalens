@@ -73,15 +73,15 @@ python scripts/generate_sample_data.py --rows 800 --output data/sample.csv --see
 `data/sample.csv` is synthetic - generated, not scraped or sourced from a
 real business - with columns:
 
-| column       | description                                 |
-| ------------ | ------------------------------------------- |
-| `date`       | sale date (YYYY-MM-DD)                      |
-| `store`      | store location (Downtown, Riverside, ...)   |
-| `category`   | product category (coffee, tea, pastry, ...) |
-| `item`       | specific item sold                          |
-| `quantity`   | units sold in that transaction              |
-| `unit_price` | price per unit                              |
-| `revenue`    | `quantity * unit_price`                     |
+| column      | description                                  |
+|-------------|-----------------------------------------------|
+| `date`      | sale date (YYYY-MM-DD)                        |
+| `store`     | store location (Downtown, Riverside, ...)     |
+| `category`  | product category (coffee, tea, pastry, ...)   |
+| `item`      | specific item sold                            |
+| `quantity`  | units sold in that transaction                |
+| `unit_price`| price per unit                                |
+| `revenue`   | `quantity * unit_price`                       |
 
 A small number of rows are intentionally duplicated or missing values, so
 the cleaning functions in `datalens.cleaning` have something real to clean.

@@ -137,9 +137,11 @@ def quality(
     issues.to_csv(output, index=False)
     click.echo(f"Found {len(issues)} quality issue rows. Saved to {output}")
 
+
 def main() -> None:
     cli()
 
 
 if __name__ == "__main__":
     sys.exit(main())
+
