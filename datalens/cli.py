@@ -17,6 +17,7 @@ import pandas as pd
 from datalens.analysis import group_by_summary, summarize
 from datalens.charts import plot_by_category
 from datalens.cleaning import clean_data
+from datalens.quality import find_data_quality_issues
 
 
 def _load_csv(path: str) -> pd.DataFrame:
@@ -107,6 +108,35 @@ def clean(input_csv: str, output: str, missing_strategy: str) -> None:
     cleaned.to_csv(output, index=False)
     click.echo(f"Cleaned {before} rows -> {len(cleaned)} rows. Saved to {output}")
 
+@cli.command()
+@click.argument("input_csv", type=str)
+@click.option(
+    "--output",
+    default="quality_issues.csv",
+    show_default=True,
+    help="Path to write the rows with quality issues to.",
+)
+@click.option(
+    "--tolerance",
+    default=0.01,
+    type=click.FloatRange(min=0.0),
+    show_default=True,
+    help="Absolute currency tolerance for the revenue check.",
+)
+def quality(
+    input_csv: str, output: str, tolerance: float
+) -> None:
+    """Find data-quality issues in INPUT_CSV and save the affected rows."""
+    df = _load_csv(input_csv)
+    try:
+        issues = find_data_quality_issues(
+            df, tolerance=tolerance
+        )
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+    issues.to_csv(output, index=False)
+    click.echo(f"Found {len(issues)} quality issue rows. Saved to {output}")
+
 
 def main() -> None:
     cli()
@@ -114,3 +144,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     sys.exit(main())
+

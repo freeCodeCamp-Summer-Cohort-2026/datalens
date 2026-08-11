@@ -54,6 +54,9 @@ datalens chart data/sample.csv --by category --output chart.png
 
 # Clean a CSV (dedupe, fix types, handle missing values) and save the result
 datalens clean data/sample.csv --output cleaned.csv --missing-strategy drop
+
+# Check for data quality (missing values in quantity, revenue, values, negative quantity, negative revenue, or revenue values that do not match quantity * unit_price within an absolute tolerance amount.Default tolerance value is 0.01)
+datalens quality data/sample.csv --output quality_report.csv --tolerance 0.03
 ```
 
 Run `datalens --help` or `datalens <command> --help` for the full option
