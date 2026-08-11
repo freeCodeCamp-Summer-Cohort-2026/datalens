@@ -53,3 +53,28 @@ def test_clean_command_smoke(tmp_path):
 
     assert result.exit_code == 0
     assert os.path.isfile(output_path)
+
+
+def test_quality_command_writes_issues(tmp_path):
+    csv_path = tmp_path / "quality_sample.csv"
+    output_path = tmp_path / "quality_issues.csv"
+    df = pd.DataFrame(
+        {
+            "quantity": [2, -1],
+            "unit_price": [3.0, 4.0],
+            "revenue": [6.0, 4.0],
+        }
+    )
+    df.to_csv(csv_path, index=False)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["quality", str(csv_path), "--output", str(output_path)]
+    )
+
+    assert result.exit_code == 0
+    assert "Found 1 quality issue rows" in result.output
+    issues = pd.read_csv(output_path)
+    assert len(issues) == 1
+    assert issues.loc[0, "quantity"] == -1
+    assert "negative_quantity" in issues.loc[0, "issues"]
