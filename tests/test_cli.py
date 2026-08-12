@@ -81,13 +81,27 @@ def test_quality_command_writes_issues(tmp_path):
 
 def test_trend_command_smoke(tmp_path):
     csv_path = tmp_path / "sample.csv"
-    output_path = "rolling_average_trend.csv"
+    output_path = tmp_path / "rolling_average_trend.csv"
     _write_sample_csv(str(csv_path))
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["trend", str(csv_path), "--window", "2"])
+    result = runner.invoke(cli, ["trend", str(csv_path), "--window", "2", "--output", str(output_path)])
 
     assert result.exit_code == 0
     rolling_average = pd.read_csv(output_path)
     assert len(rolling_average) == 3
     assert rolling_average.loc[1, "revenue_rolling_avg"] == 4.25
+
+
+def test_trend_command_invalid_column_error(tmp_path):
+    csv_path = tmp_path / "sample.csv"
+    _write_sample_csv(str(csv_path))
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["trend", str(csv_path), "--column", "not_a_column"],
+    )
+
+    assert result.exit_code != 0
+    assert isinstance(result.exception, KeyError)
