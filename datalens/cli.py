@@ -16,9 +16,10 @@ import json
 import click
 import pandas as pd
 
-from datalens.analysis import group_by_summary, summarize
+from datalens.analysis import group_by_summary, summarize, rolling_average
 from datalens.charts import plot_by_category
 from datalens.cleaning import clean_data
+from datalens.quality import find_data_quality_issues
 
 
 def _load_csv(path: str) -> pd.DataFrame:
@@ -142,9 +143,75 @@ def clean(input_csv: str, output: str, missing_strategy: str) -> None:
     cleaned.to_csv(output, index=False)
     click.echo(f"Cleaned {before} rows -> {len(cleaned)} rows. Saved to {output}")
 
+
+@cli.command()
+@click.argument("input_csv", type=str)
+@click.option(
+    "--output",
+    default="quality_issues.csv",
+    show_default=True,
+    help="Path to write the rows with quality issues to.",
+)
+@click.option(
+    "--tolerance",
+    default=0.01,
+    type=click.FloatRange(min=0.0),
+    show_default=True,
+    help="Absolute currency tolerance for the revenue check.",
+)
+def quality(
+    input_csv: str, output: str, tolerance: float
+) -> None:
+    """Find data-quality issues in INPUT_CSV and save the affected rows."""
+    df = _load_csv(input_csv)
+    try:
+        issues = find_data_quality_issues(
+            df, tolerance=tolerance
+        )
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+    issues.to_csv(output, index=False)
+    click.echo(f"Found {len(issues)} quality issue rows. Saved to {output}")
+
+
+@cli.command(name="trend")
+@click.argument("input_csv", type=str)
+@click.option(
+    "--column",
+    default="revenue",
+    show_default=True,
+    help="Column for which rolling average needs to be calculated.",
+)
+@click.option(
+    "--window",
+    default=7,
+    show_default=True,
+    help="Default window size of rolling average",
+)
+@click.option(
+    "--date-column",
+    default="date",
+    show_default=True,
+    help="Date column to calculate the windows",
+)
+@click.option(
+    "--output",
+    default="rolling_average_trend.csv",
+    show_default=True,
+    help="Name of file where rolling average output is stored",
+)
+def trend_cmd(input_csv: str, column: str, window: int, date_column: str, output: str) -> None:
+    """Compute the rolling_average for the input_csv over the provided window and column"""
+    df = _load_csv(input_csv)
+    rolling_average_df = rolling_average(df, column, window, date_column)
+    rolling_average_df.to_csv(output)
+    click.echo(f"Rolling Average of {column} with window {window} saved to {output}")
+
+
 def main() -> None:
     cli()
 
 
 if __name__ == "__main__":
     sys.exit(main())
+
