@@ -170,7 +170,7 @@ def trend_cmd(input_csv: str, column: str, window: int, date_column: str, output
     df = _load_csv(input_csv)
     rolling_average_df = rolling_average(df, column, window, date_column)
     rolling_average_df.to_csv(output)
-    click.echo(f"Rolling Average of {column} with window {window} saved to ")
+    click.echo(f"Rolling Average of {column} with window {window} saved to {output}")
 
 
 def main() -> None:
