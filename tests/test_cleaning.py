@@ -37,6 +37,13 @@ def test_handle_missing_values_fill_strategy_numeric_uses_mean():
     assert result["a"].isna().sum() == 0
     assert result.loc[1, "a"] == pytest.approx(3.0)
 
+def test_handle_missing_values_fill_strategy_all_nan_numeric_column():
+    df = pd.DataFrame({"a": [np.nan, np.nan, np.nan]})
+    result = handle_missing_values(df, strategy="fill")
+    # mean() of an all-NaN column is itself NaN, so fillna(mean) used to be
+    # a no-op — the column stayed full of NaNs. It should now fall back to 0.
+    assert result["a"].isna().sum() == 0
+    assert (result["a"] == 0).all()
 
 def test_handle_missing_values_fill_strategy_categorical_defaults_to_unknown():
     df = pd.DataFrame({"category": ["coffee", None, "tea"]})
