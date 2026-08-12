@@ -78,3 +78,16 @@ def test_quality_command_writes_issues(tmp_path):
     assert len(issues) == 1
     assert issues.loc[0, "quantity"] == -1
     assert "negative_quantity" in issues.loc[0, "issues"]
+
+def test_trend_command_smoke(tmp_path):
+    csv_path = tmp_path / "sample.csv"
+    output_path = "rolling_average_trend.csv"
+    _write_sample_csv(str(csv_path))
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["trend", str(csv_path), "--window", "2"])
+
+    assert result.exit_code == 0
+    rolling_average = pd.read_csv(output_path)
+    assert len(rolling_average) == 3
+    assert rolling_average.loc[1, "revenue_rolling_avg"] == 4.25
