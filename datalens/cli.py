@@ -11,6 +11,8 @@ from __future__ import annotations
 import os
 import sys
 
+import json
+
 import click
 import pandas as pd
 
@@ -41,7 +43,20 @@ def cli() -> None:
     default=None,
     help="Optional column to also show a group-by breakdown for (e.g. 'category').",
 )
-def summarize_cmd(input_csv: str, by: str | None) -> None:
+@click.option(
+    "--output",
+    default=None,
+    show_default=True,
+    help="Path to write the summary/breakdown report to.",
+)
+@click.option(
+    "--format",
+    default="json",
+    type=click.Choice(["csv","json"],case_sensitive=False),
+    show_default=True,
+    help="Output file format when --output is specified.",
+)
+def summarize_cmd(input_csv: str, by: str | None, output: str | None, format: str) -> None:
     """Print summary statistics for INPUT_CSV."""
     df = _load_csv(input_csv)
     summary = summarize(df)
@@ -58,7 +73,27 @@ def summarize_cmd(input_csv: str, by: str | None) -> None:
         except KeyError as exc:
             raise click.ClickException(str(exc)) from exc
         click.echo(breakdown.to_string())
-
+    if output:
+        _save_summary(summary,breakdown,output,format)
+        click.echo(f"Report saved to {output}")
+    
+def _save_summary(summary: dict,breakdown: pd.DataFrame | None, output_path: str, file_format: str)->None:
+        if file_format=="csv":
+            if breakdown is not None:
+                breakdown.to_csv(output_path)
+            else:
+                summary_df=pd.DataFrame(list(summary.items()),columns=["metric","value"])
+                summary_df.to_csv(output_path,index=False)
+        elif file_format=="json": 
+            try:
+                data_to_write={"summary": summary}
+                if breakdown is not None:
+                    data_to_write["breakdown"]=breakdown.reset_index().to_dict(orient="records")
+                with open(output_path,"w",encoding="utf-8") as f:
+                    json.dump(data_to_write,f,indent=2)
+            except KeyError as exc:
+                raise click.ClickException(str(exc)) from exc
+            
 
 @cli.command()
 @click.argument("input_csv", type=str)
@@ -106,7 +141,6 @@ def clean(input_csv: str, output: str, missing_strategy: str) -> None:
     cleaned = clean_data(df, missing_strategy=missing_strategy)
     cleaned.to_csv(output, index=False)
     click.echo(f"Cleaned {before} rows -> {len(cleaned)} rows. Saved to {output}")
-
 
 def main() -> None:
     cli()
