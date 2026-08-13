@@ -98,6 +98,7 @@ def clean_data(
     df: pd.DataFrame,
     missing_strategy: str = "drop",
     date_column: str = "date",
+    verbose: bool = False,
 ) -> pd.DataFrame:
     """Run the standard cleaning pipeline: coerce types, dedupe, handle NaNs.
 
@@ -105,11 +106,35 @@ def clean_data(
         df: Raw input dataframe.
         missing_strategy: Passed through to :func:`handle_missing_values`.
         date_column: Passed through to :func:`coerce_types`.
+        verbose: if True, return a tuple of (cleaned_dataframe, details_dict).
 
     Returns:
-        A cleaned dataframe.
+        A cleaned dataframe, or (cleaned_dataframe, details_dict) if verbose is True.
     """
+    
+    # 1. Track initial dtypes and coerce types
+    before_dtypes = df.dtypes.astype(str).to_dict()
     result = coerce_types(df, date_column=date_column)
+    
+    coerced_columns = {}
+    for col, new_dtype in result.dtypes.astype(str).to_dict().items():
+        if col in before_dtypes and before_dtypes[col] != new_dtype:
+            coerced_columns[col] = f"{before_dtypes[col]} -> {new_dtype}"
+    # 2. Track duplicates before dropping
+    before_dedupe = len(result)
     result = remove_duplicates(result)
+    duplicates_removed = before_dedupe - len(result)
+    # 3. Track missing values before handling
+    rows_with_missing = int(result.isna().any(axis=1).sum())
+    cols_with_missing = result.columns[result.isna().any()].tolist()
+    
     result = handle_missing_values(result, strategy=missing_strategy)
+    if verbose:
+        details = {
+            "duplicates_removed": duplicates_removed,
+            "missing_handled_rows": rows_with_missing,
+            "missing_handled_cols": cols_with_missing,
+            "coerced_dtypes": coerced_columns,
+        }
+        return result, details
     return result

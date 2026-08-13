@@ -157,14 +157,37 @@ def chart(input_csv: str, by: str, kind: str, output: str) -> None:
     show_default=True,
     help="How to handle missing values.",
 )
-def clean(input_csv: str, output: str, missing_strategy: str) -> None:
+@click.option(
+    "--verbose",
+    is_flag=True,
+    help="Print extra details about the cleaning pipeline.",
+)
+def clean(input_csv: str, output: str, missing_strategy: str, verbose: bool) -> None:
     """Clean INPUT_CSV (dedupe, fix types, handle missing values) and save it."""
     df = _load_csv(input_csv)
     before = len(df)
-    cleaned = clean_data(df, missing_strategy=missing_strategy)
+    
+    if verbose:
+        cleaned, details = clean_data(df, missing_strategy=missing_strategy, verbose=True)
+    else:
+        cleaned = clean_data(df, missing_strategy=missing_strategy)
+        
     cleaned.to_csv(output, index=False)
     click.echo(f"Cleaned {before} rows -> {len(cleaned)} rows. Saved to {output}")
-
+    
+    if verbose:
+        click.echo("\n--- Cleaning Details ---")
+        click.echo(f"Duplicates removed: {details['duplicates_removed']}")
+        click.echo(f"Rows with missing values handled: {details['missing_handled_rows']}")
+        if details['missing_handled_cols']:
+            click.echo(f"  -> Columns affected: {', '.join(details['missing_handled_cols'])}")
+        
+        click.echo("Dtypes coerced:")
+        if details['coerced_dtypes']:
+            for col, transition in details['coerced_dtypes'].items():
+                click.echo(f"  -> {col}: {transition}")
+        else:
+            click.echo("  -> None")
 
 @cli.command()
 @click.argument("input_csv", type=str)
