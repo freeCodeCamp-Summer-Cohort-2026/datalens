@@ -131,7 +131,7 @@ def test_summarize_command_export_csv(tmp_path):
     assert "category" in df_out.columns
     assert "total_revenue" in df_out.columns
 
-
+    
 def test_quality_command_writes_issues(tmp_path):
     csv_path = tmp_path / "quality_sample.csv"
     output_path = tmp_path / "quality_issues.csv"

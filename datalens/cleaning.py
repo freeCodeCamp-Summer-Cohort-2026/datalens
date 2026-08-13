@@ -37,6 +37,7 @@ def handle_missing_values(
         strategy: Either ``"drop"`` (drop any row containing a NaN) or
             ``"fill"`` (fill NaNs using ``fill_values`` or sensible
             per-column defaults: numeric columns get their column mean,
+            or ``0`` if the entire column is NaN (mean is undefined),
             everything else gets ``"unknown"``).
         fill_values: Optional explicit mapping of column name -> fill value.
             Only used when ``strategy == "fill"``. Columns not present in
@@ -61,7 +62,10 @@ def handle_missing_values(
         if column in fill_values:
             result[column] = result[column].fillna(fill_values[column])
         elif pd.api.types.is_numeric_dtype(result[column]):
-            result[column] = result[column].fillna(result[column].mean())
+            mean = result[column].mean()
+            # mean() is itself NaN when the whole column is NaN — fall back
+            # to 0 so the column doesn't silently stay full of NaNs.
+            result[column] = result[column].fillna(mean if pd.notna(mean) else 0)
         else:
             result[column] = result[column].fillna("unknown")
     return result.reset_index(drop=True)
