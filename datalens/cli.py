@@ -66,6 +66,8 @@ def summarize_cmd(input_csv: str, by: str | None, output: str | None, format: st
     for key, value in summary.items():
         click.echo(f"{key}: {value}")
 
+    breakdown=None
+
     if by:
         click.echo("")
         click.echo(f"Breakdown by {by}:")
@@ -92,7 +94,7 @@ def _save_summary(summary: dict,breakdown: pd.DataFrame | None, output_path: str
                     data_to_write["breakdown"]=breakdown.reset_index().to_dict(orient="records")
                 with open(output_path,"w",encoding="utf-8") as f:
                     json.dump(data_to_write,f,indent=2)
-            except KeyError as exc:
+            except (KeyError,TypeError) as exc:
                 raise click.ClickException(str(exc)) from exc
             
 
