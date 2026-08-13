@@ -16,8 +16,14 @@ import json
 import click
 import pandas as pd
 
-from datalens.analysis import group_by_summary, summarize, rolling_average
+from datalens.analysis import (
+    group_by_summary,
+    summarize,
+    rolling_average,
+    validate_columns,
+)
 from datalens.charts import plot_by_category, plot_revenue_over_time
+
 from datalens.cleaning import clean_data
 from datalens.quality import find_data_quality_issues
 
@@ -54,11 +60,13 @@ def cli() -> None:
 @click.option(
     "--format",
     default="json",
-    type=click.Choice(["csv","json"],case_sensitive=False),
+    type=click.Choice(["csv", "json"], case_sensitive=False),
     show_default=True,
     help="Output file format when --output is specified.",
 )
-def summarize_cmd(input_csv: str, by: str | None, output: str | None, format: str) -> None:
+def summarize_cmd(
+    input_csv: str, by: str | None, output: str | None, format: str
+) -> None:
     """Print summary statistics for INPUT_CSV."""
     df = _load_csv(input_csv)
     summary = summarize(df)
@@ -67,7 +75,7 @@ def summarize_cmd(input_csv: str, by: str | None, output: str | None, format: st
     for key, value in summary.items():
         click.echo(f"{key}: {value}")
 
-    breakdown=None
+    breakdown = None
 
     if by:
         click.echo("")
@@ -78,26 +86,33 @@ def summarize_cmd(input_csv: str, by: str | None, output: str | None, format: st
             raise click.ClickException(str(exc)) from exc
         click.echo(breakdown.to_string())
     if output:
-        _save_summary(summary,breakdown,output,format)
+        _save_summary(summary, breakdown, output, format)
         click.echo(f"Report saved to {output}")
-    
-def _save_summary(summary: dict,breakdown: pd.DataFrame | None, output_path: str, file_format: str)->None:
-        if file_format=="csv":
+
+
+def _save_summary(
+    summary: dict, breakdown: pd.DataFrame | None, output_path: str, file_format: str
+) -> None:
+    if file_format == "csv":
+        if breakdown is not None:
+            breakdown.to_csv(output_path)
+        else:
+            summary_df = pd.DataFrame(
+                list(summary.items()), columns=["metric", "value"]
+            )
+            summary_df.to_csv(output_path, index=False)
+    elif file_format == "json":
+        try:
+            data_to_write = {"summary": summary}
             if breakdown is not None:
-                breakdown.to_csv(output_path)
-            else:
-                summary_df=pd.DataFrame(list(summary.items()),columns=["metric","value"])
-                summary_df.to_csv(output_path,index=False)
-        elif file_format=="json": 
-            try:
-                data_to_write={"summary": summary}
-                if breakdown is not None:
-                    data_to_write["breakdown"]=breakdown.reset_index().to_dict(orient="records")
-                with open(output_path,"w",encoding="utf-8") as f:
-                    json.dump(data_to_write,f,indent=2)
-            except (KeyError,TypeError) as exc:
-                raise click.ClickException(str(exc)) from exc
-            
+                data_to_write["breakdown"] = breakdown.reset_index().to_dict(
+                    orient="records"
+                )
+            with open(output_path, "w", encoding="utf-8") as f:
+                json.dump(data_to_write, f, indent=2)
+        except (KeyError, TypeError) as exc:
+            raise click.ClickException(str(exc)) from exc
+
 
 @cli.command()
 @click.argument("input_csv", type=str)
@@ -204,15 +219,11 @@ def clean(input_csv: str, output: str, missing_strategy: str, verbose: bool) -> 
     show_default=True,
     help="Absolute currency tolerance for the revenue check.",
 )
-def quality(
-    input_csv: str, output: str, tolerance: float
-) -> None:
+def quality(input_csv: str, output: str, tolerance: float) -> None:
     """Find data-quality issues in INPUT_CSV and save the affected rows."""
     df = _load_csv(input_csv)
     try:
-        issues = find_data_quality_issues(
-            df, tolerance=tolerance
-        )
+        issues = find_data_quality_issues(df, tolerance=tolerance)
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
     issues.to_csv(output, index=False)
@@ -245,12 +256,27 @@ def quality(
     show_default=True,
     help="Name of file where rolling average output is stored",
 )
-def trend_cmd(input_csv: str, column: str, window: int, date_column: str, output: str) -> None:
+def trend_cmd(
+    input_csv: str, column: str, window: int, date_column: str, output: str
+) -> None:
     """Compute the rolling_average for the input_csv over the provided window and column"""
     df = _load_csv(input_csv)
     rolling_average_df = rolling_average(df, column, window, date_column)
     rolling_average_df.to_csv(output)
     click.echo(f"Rolling Average of {column} with window {window} saved to {output}")
+
+
+@cli.command(name="validate")
+@click.argument("input_csv", type=str)
+def validate_cmd(input_csv: str) -> None:
+    """Check that INPUT_CSV contains all required columns."""
+    df = _load_csv(input_csv)
+    missing = validate_columns(df)
+
+    if missing:
+        missing_str = ", ".join(missing)
+        raise click.ClickException(f"Missing required columns: {missing_str}")
+    click.echo("Validation passed: All required columns are present.")
 
 
 def main() -> None:
@@ -259,4 +285,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     sys.exit(main())
-

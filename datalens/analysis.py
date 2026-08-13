@@ -120,3 +120,24 @@ def rolling_average(
     result = pd.DataFrame({column: daily})
     result[f"{column}_rolling_avg"] = daily.rolling(window=window, min_periods=1).mean()
     return result
+
+
+REQUIRED_COLUMNS = [
+    "date",
+    "store",
+    "category",
+    "item",
+    "quantity",
+    "unit_price",
+    "revenue",
+]
+
+
+def validate_columns(
+    df: pd.DataFrame, required_columns: list[str] | None = None
+) -> list[str]:
+    """Return a list of missing columns from df. Returns empty list if all exist."""
+    if required_columns is None:
+        required_columns = REQUIRED_COLUMNS
+    missing = [col for col in required_columns if col not in df.columns]
+    return missing

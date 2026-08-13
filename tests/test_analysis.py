@@ -1,7 +1,12 @@
 import pandas as pd
 import pytest
 
-from datalens.analysis import group_by_summary, rolling_average, summarize
+from datalens.analysis import (
+    group_by_summary,
+    rolling_average,
+    summarize,
+    validate_columns,
+)
 
 
 @pytest.fixture
@@ -75,3 +80,41 @@ def test_rolling_average_invalid_window_raises(sample_df):
 def test_rolling_average_missing_column_raises(sample_df):
     with pytest.raises(KeyError):
         rolling_average(sample_df, column="not_a_column")
+
+
+def test_validate_columns_all_present():
+    df = pd.DataFrame(
+        columns=[
+            "date",
+            "store",
+            "category",
+            "item",
+            "quantity",
+            "unit_price",
+            "revenue",
+        ]
+    )
+    missing = validate_columns(df)
+    assert missing == []
+
+
+def test_validate_columns_missing_some():
+    df = pd.DataFrame(
+        columns=[
+            "date",
+            "category",
+            "quantity",
+            "unit_price",
+            "revenue",
+        ]
+    )
+    missing = validate_columns(df)
+    assert set(missing) == {"store", "item"}
+
+
+def test_summarize_empty_dataframe():
+    """Unit test: verify summarize() directly with an empty DataFrame."""
+    empty_df = pd.DataFrame(columns=["date", "revenue", "quantity"])
+    summary = summarize(empty_df)
+
+    assert summary["row_count"] == 0
