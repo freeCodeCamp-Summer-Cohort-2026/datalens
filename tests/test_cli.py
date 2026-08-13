@@ -193,3 +193,32 @@ def test_chart_command_line_chart(tmp_path):
 
     assert result.exit_code == 0
     assert os.path.isfile(output_path)
+
+def test_clean_command_verbose_prints_details(tmp_path):
+    csv_path = tmp_path / "sample.csv"
+    output_path = tmp_path / "cleaned.csv"
+
+    # Build a known input: 1 duplicate row + 1 missing category + string date
+    df = pd.DataFrame(
+        {
+            "date": ["2026-01-01", "2026-01-01", "2026-01-02"],
+            "category": ["coffee", "coffee", None],
+            "quantity": [1, 1, 2],
+            "unit_price": [2.5, 2.5, 3.0],
+            "revenue": [2.5, 2.5, 6.0],
+        }
+    )
+    df.to_csv(csv_path, index=False)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["clean", str(csv_path), "--output", str(output_path), "--verbose"],
+    )
+
+    assert result.exit_code == 0
+    assert "Cleaning Details" in result.output
+    assert "Duplicates removed: 1" in result.output
+    assert "Rows with missing values handled: 1" in result.output
+    assert "category" in result.output   # column name appears in the affected list
+    assert "date" in result.output       # date dtype coercion is reported

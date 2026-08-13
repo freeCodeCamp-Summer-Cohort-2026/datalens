@@ -93,3 +93,42 @@ def test_clean_data_pipeline_dedupes_and_drops_missing_by_default():
     # category is dropped under the default "drop" strategy.
     assert len(result) == 1
     assert result.iloc[0]["category"] == "coffee"
+
+def test_clean_data_verbose_returns_tuple():
+    df = pd.DataFrame(
+        {
+            # date as string -> will be coerced to datetime
+            "date": ["2026-01-01", "2026-01-01", "2026-01-02"],
+            # one missing category -> row will be dropped
+            "category": ["coffee", "coffee", None],
+            "quantity": [1, 1, 2],
+            "unit_price": [2.5, 2.5, 3.0],
+            "revenue": [2.5, 2.5, 6.0],
+        }
+    )
+    result = clean_data(df, verbose=True)
+
+    # Must return a 2-tuple
+    assert isinstance(result, tuple)
+    cleaned, details = result
+
+    # The cleaned DataFrame is still correct
+    assert len(cleaned) == 1
+
+    # 1 exact duplicate row was removed (row 0 and row 1 are identical)
+    assert details["duplicates_removed"] == 1
+
+    # After deduplication, 1 row had a missing value (the None category)
+    assert details["missing_handled_rows"] == 1
+    assert "category" in details["missing_handled_cols"]
+
+    # 'date' column was coerced from object/str to datetime
+    assert "date" in details["coerced_dtypes"]
+
+
+def test_clean_data_verbose_false_returns_dataframe():
+    df = pd.DataFrame({"date": ["2026-01-01"], "quantity": [1], "revenue": [5.0], "unit_price": [5.0]})
+    result = clean_data(df, verbose=False)
+
+    # Default behavior: returns plain DataFrame, not a tuple
+    assert isinstance(result, pd.DataFrame)
