@@ -111,11 +111,11 @@ def clean_data(
     Returns:
         A cleaned dataframe, or (cleaned_dataframe, details_dict) if verbose is True.
     """
-    
+
     # 1. Track initial dtypes and coerce types
     before_dtypes = df.dtypes.astype(str).to_dict()
     result = coerce_types(df, date_column=date_column)
-    
+
     coerced_columns = {}
     for col, new_dtype in result.dtypes.astype(str).to_dict().items():
         if col in before_dtypes and before_dtypes[col] != new_dtype:
@@ -127,7 +127,7 @@ def clean_data(
     # 3. Track missing values before handling
     rows_with_missing = int(result.isna().any(axis=1).sum())
     cols_with_missing = result.columns[result.isna().any()].tolist()
-    
+
     result = handle_missing_values(result, strategy=missing_strategy)
     if verbose:
         details = {

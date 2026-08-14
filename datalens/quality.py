@@ -6,9 +6,7 @@ import numpy as np
 import pandas as pd
 
 
-def find_data_quality_issues(
-    df: pd.DataFrame, *, tolerance: float = 0.01
-) -> pd.DataFrame:
+def find_data_quality_issues(df: pd.DataFrame, *, tolerance: float = 0.01) -> pd.DataFrame:
     """Return rows failing negative quantity, negative revenue, or revenue mismatch checks.
 
     Revenue mismatch means the absolute difference between revenue and

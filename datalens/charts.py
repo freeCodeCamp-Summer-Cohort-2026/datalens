@@ -79,4 +79,3 @@ def plot_revenue_over_time(
     plt.close(fig)
 
     return output_path
-    

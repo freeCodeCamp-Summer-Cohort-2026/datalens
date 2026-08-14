@@ -113,15 +113,9 @@ def write_csv(rows: list[dict], output_path: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--rows", type=int, default=800, help="Number of base rows to generate."
-    )
-    parser.add_argument(
-        "--output", type=str, default="data/sample.csv", help="Output CSV path."
-    )
-    parser.add_argument(
-        "--seed", type=int, default=42, help="Random seed for reproducibility."
-    )
+    parser.add_argument("--rows", type=int, default=800, help="Number of base rows to generate.")
+    parser.add_argument("--output", type=str, default="data/sample.csv", help="Output CSV path.")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility.")
     args = parser.parse_args()
 
     rng = random.Random(args.seed)

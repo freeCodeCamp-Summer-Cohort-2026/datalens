@@ -60,9 +60,7 @@ def test_handle_missing_values_fill_strategy_categorical_defaults_to_unknown():
 
 def test_handle_missing_values_fill_strategy_respects_explicit_fill_values():
     df = pd.DataFrame({"store": ["Downtown", None]})
-    result = handle_missing_values(
-        df, strategy="fill", fill_values={"store": "Unspecified"}
-    )
+    result = handle_missing_values(df, strategy="fill", fill_values={"store": "Unspecified"})
     assert result.loc[1, "store"] == "Unspecified"
 
 
@@ -102,6 +100,7 @@ def test_clean_data_pipeline_dedupes_and_drops_missing_by_default():
     # category is dropped under the default "drop" strategy.
     assert len(result) == 1
     assert result.iloc[0]["category"] == "coffee"
+
 
 def test_clean_data_verbose_returns_tuple():
     df = pd.DataFrame(

@@ -8,22 +8,20 @@ independently unit-testable.
 
 from __future__ import annotations
 
+import json
 import os
 import sys
-
-import json
 
 import click
 import pandas as pd
 
 from datalens.analysis import (
     group_by_summary,
-    summarize,
     rolling_average,
+    summarize,
     validate_columns,
 )
 from datalens.charts import plot_by_category, plot_revenue_over_time
-
 from datalens.cleaning import clean_data
 from datalens.quality import find_data_quality_issues
 
@@ -50,7 +48,6 @@ def cli() -> None:
     default=None,
     help="Optional column to also show a group-by breakdown for (e.g. 'category').",
 )
-
 @click.option(
     "--output",
     default=None,
@@ -64,9 +61,7 @@ def cli() -> None:
     show_default=True,
     help="Output file format when --output is specified.",
 )
-def summarize_cmd(
-    input_csv: str, by: str | None, output: str | None, format: str
-) -> None:
+def summarize_cmd(input_csv: str, by: str | None, output: str | None, format: str) -> None:
     """Print summary statistics for INPUT_CSV."""
     df = _load_csv(input_csv)
     summary = summarize(df)
@@ -90,24 +85,18 @@ def summarize_cmd(
         click.echo(f"Report saved to {output}")
 
 
-def _save_summary(
-    summary: dict, breakdown: pd.DataFrame | None, output_path: str, file_format: str
-) -> None:
+def _save_summary(summary: dict, breakdown: pd.DataFrame | None, output_path: str, file_format: str) -> None:
     if file_format == "csv":
         if breakdown is not None:
             breakdown.to_csv(output_path)
         else:
-            summary_df = pd.DataFrame(
-                list(summary.items()), columns=["metric", "value"]
-            )
+            summary_df = pd.DataFrame(list(summary.items()), columns=["metric", "value"])
             summary_df.to_csv(output_path, index=False)
     elif file_format == "json":
         try:
             data_to_write = {"summary": summary}
             if breakdown is not None:
-                data_to_write["breakdown"] = breakdown.reset_index().to_dict(
-                    orient="records"
-                )
+                data_to_write["breakdown"] = breakdown.reset_index().to_dict(orient="records")
             with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(data_to_write, f, indent=2)
         except (KeyError, TypeError) as exc:
@@ -181,28 +170,29 @@ def clean(input_csv: str, output: str, missing_strategy: str, verbose: bool) -> 
     """Clean INPUT_CSV (dedupe, fix types, handle missing values) and save it."""
     df = _load_csv(input_csv)
     before = len(df)
-    
+
     if verbose:
         cleaned, details = clean_data(df, missing_strategy=missing_strategy, verbose=True)
     else:
         cleaned = clean_data(df, missing_strategy=missing_strategy)
-        
+
     cleaned.to_csv(output, index=False)
     click.echo(f"Cleaned {before} rows -> {len(cleaned)} rows. Saved to {output}")
-    
+
     if verbose:
         click.echo("\n--- Cleaning Details ---")
         click.echo(f"Duplicates removed: {details['duplicates_removed']}")
         click.echo(f"Rows with missing values handled: {details['missing_handled_rows']}")
-        if details['missing_handled_cols']:
+        if details["missing_handled_cols"]:
             click.echo(f"  -> Columns affected: {', '.join(details['missing_handled_cols'])}")
-        
+
         click.echo("Dtypes coerced:")
-        if details['coerced_dtypes']:
-            for col, transition in details['coerced_dtypes'].items():
+        if details["coerced_dtypes"]:
+            for col, transition in details["coerced_dtypes"].items():
                 click.echo(f"  -> {col}: {transition}")
         else:
             click.echo("  -> None")
+
 
 @cli.command()
 @click.argument("input_csv", type=str)
@@ -256,9 +246,7 @@ def quality(input_csv: str, output: str, tolerance: float) -> None:
     show_default=True,
     help="Name of file where rolling average output is stored",
 )
-def trend_cmd(
-    input_csv: str, column: str, window: int, date_column: str, output: str
-) -> None:
+def trend_cmd(input_csv: str, column: str, window: int, date_column: str, output: str) -> None:
     """Compute the rolling_average for the input_csv over the provided window and column"""
     df = _load_csv(input_csv)
     rolling_average_df = rolling_average(df, column, window, date_column)

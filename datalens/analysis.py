@@ -8,8 +8,8 @@ the CLI, or plot in a notebook.
 
 from __future__ import annotations
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 
 def summarize(df: pd.DataFrame) -> dict:
@@ -134,9 +134,7 @@ REQUIRED_COLUMNS = [
 ]
 
 
-def validate_columns(
-    df: pd.DataFrame, required_columns: list[str] | None = None
-) -> list[str]:
+def validate_columns(df: pd.DataFrame, required_columns: list[str] | None = None) -> list[str]:
     """Return a list of missing columns from df. Returns empty list if all exist."""
     if required_columns is None:
         required_columns = REQUIRED_COLUMNS
@@ -181,9 +179,7 @@ def detect_outliers(
     values = df[column]
     if method == "zscore":
         std = values.std()
-        scores = (
-            (values - values.mean()) / std if std else pd.Series(0.0, index=df.index)
-        )
+        scores = (values - values.mean()) / std if std else pd.Series(0.0, index=df.index)
         mask = scores.abs() > threshold
     else:
         q1 = values.quantile(0.25)
@@ -236,9 +232,7 @@ def weighted_moving_average(
     daily = daily.sort_index()
 
     result = pd.DataFrame({column: daily})
-    result[f"{column}_weighted_moving_avg"] = daily.rolling(
-        window=window, min_periods=1
-    ).apply(_cal_wma, raw=True)
+    result[f"{column}_weighted_moving_avg"] = daily.rolling(window=window, min_periods=1).apply(_cal_wma, raw=True)
     return result
 
 

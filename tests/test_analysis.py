@@ -2,11 +2,11 @@ import pandas as pd
 import pytest
 
 from datalens.analysis import (
+    detect_outliers,
     group_by_summary,
     rolling_average,
     summarize,
     validate_columns,
-    detect_outliers,
     weighted_moving_average,
 )
 

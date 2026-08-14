@@ -153,9 +153,7 @@ def test_quality_command_writes_issues(tmp_path):
     df.to_csv(csv_path, index=False)
 
     runner = CliRunner()
-    result = runner.invoke(
-        cli, ["quality", str(csv_path), "--output", str(output_path)]
-    )
+    result = runner.invoke(cli, ["quality", str(csv_path), "--output", str(output_path)])
 
     assert result.exit_code == 0
     assert "Found 1 quality issue rows" in result.output
@@ -171,9 +169,7 @@ def test_trend_command_smoke(tmp_path):
     _write_sample_csv(str(csv_path))
 
     runner = CliRunner()
-    result = runner.invoke(
-        cli, ["trend", str(csv_path), "--window", "2", "--output", str(output_path)]
-    )
+    result = runner.invoke(cli, ["trend", str(csv_path), "--window", "2", "--output", str(output_path)])
 
     assert result.exit_code == 0
     rolling_average = pd.read_csv(output_path)
@@ -201,9 +197,7 @@ def test_chart_command_line_chart(tmp_path):
     _write_sample_csv(str(csv_path))
 
     runner = CliRunner()
-    result = runner.invoke(
-        cli, ["chart", str(csv_path), "--kind", "line", "--output", str(output_path)]
-    )
+    result = runner.invoke(cli, ["chart", str(csv_path), "--kind", "line", "--output", str(output_path)])
 
     assert result.exit_code == 0
     assert os.path.isfile(output_path)
@@ -235,8 +229,8 @@ def test_clean_command_verbose_prints_details(tmp_path):
     assert "Cleaning Details" in result.output
     assert "Duplicates removed: 1" in result.output
     assert "Rows with missing values handled: 1" in result.output
-    assert "category" in result.output   # column name appears in the affected list
-    assert "date" in result.output       # date dtype coercion is reported
+    assert "category" in result.output  # column name appears in the affected list
+    assert "date" in result.output  # date dtype coercion is reported
 
 
 def test_validate_command_success(tmp_path):
