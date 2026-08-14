@@ -7,6 +7,7 @@ from datalens.analysis import (
     summarize,
     validate_columns,
     detect_outliers,
+    weighted_moving_average,
 )
 
 
@@ -155,3 +156,52 @@ def test_detect_outliers_invalid_method_raises(sample_df):
 def test_detect_outliers_missing_column_raises(sample_df):
     with pytest.raises(KeyError):
         detect_outliers(sample_df, column="not_a_column")
+
+
+def test_weighted_moving_average_differs_from_plain_on_trend():
+    """Verify WMA reacts faster to upward trends than SMA."""
+    df = pd.DataFrame(
+        {
+            "date": [
+                "2026-01-01",
+                "2026-01-02",
+                "2026-01-03",
+                "2026-01-04",
+                "2026-01-05",
+            ],
+            "revenue": [10.0, 20.0, 30.0, 40.0, 50.0],
+        }
+    )
+    sma_res = rolling_average(df, column="revenue", window=3)
+    wma_res = weighted_moving_average(df, column="revenue", window=3)
+
+    latest_sma = sma_res.loc["2026-01-05", "revenue_rolling_avg"]
+    latest_wma = wma_res.loc["2026-01-05", "revenue_weighted_moving_avg"]
+
+    assert latest_wma > latest_sma
+
+
+def test_weighted_moving_average_window_larger_than_data():
+    """Verify WMA handles window sizes larger than total row count."""
+    df = pd.DataFrame(
+        {
+            "date": ["2026-01-01", "2026-01-02"],
+            "revenue": [10.0, 20.0],
+        }
+    )
+    result = weighted_moving_average(df, column="revenue", window=10)
+
+    assert len(result) == 2
+    assert not result["revenue_weighted_moving_avg"].isna().any()
+
+
+def test_weighted_moving_average_invalid_column_raises_key_error():
+    """Verify KeyError is raised when specified column is missing."""
+    df = pd.DataFrame(
+        {
+            "date": ["2026-01-01"],
+            "revenue": [10.0],
+        }
+    )
+    with pytest.raises(KeyError):
+        weighted_moving_average(df, column="non_existent_column")

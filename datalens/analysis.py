@@ -9,6 +9,7 @@ the CLI, or plot in a notebook.
 from __future__ import annotations
 
 import pandas as pd
+import numpy as np
 
 
 def summarize(df: pd.DataFrame) -> dict:
@@ -181,9 +182,7 @@ def detect_outliers(
     if method == "zscore":
         std = values.std()
         scores = (
-            (values - values.mean()) / std
-            if std
-            else pd.Series(0.0, index=df.index)
+            (values - values.mean()) / std if std else pd.Series(0.0, index=df.index)
         )
         mask = scores.abs() > threshold
     else:
@@ -193,3 +192,56 @@ def detect_outliers(
         mask = (values < q1 - threshold * iqr) | (values > q3 + threshold * iqr)
 
     return df.loc[mask.fillna(False)].copy()
+
+
+def weighted_moving_average(
+    df: pd.DataFrame,
+    column: str = "revenue",
+    window: int = 7,
+    date_column: str = "date",
+) -> pd.DataFrame:
+    """Compute a weighted moving average of ``column`` over time.
+
+    Rows are first grouped by day (summed), then a linearly weighted moving
+    average is applied across the daily series. Weights increase linearly
+    from 1 for the oldest day in the window up to k (the window size) for
+    the most recent day, giving recent values greater influence on the trend.
+
+    Args:
+        df: Input dataframe with a date column and a numeric column.
+        column: Numeric column to average (e.g. ``"revenue"``).
+        window: Rolling window size, in days.
+        date_column: Name of the date column.
+
+    Returns:
+        A dataframe indexed by date with two columns: the daily total of
+        ``column`` and its weighted moving average (named
+        ``f"{column}_weighted_moving_avg"``).
+
+    Raises:
+        KeyError: If ``date_column`` or ``column`` is not present.
+        ValueError: If ``window`` is not a positive integer.
+    """
+    if date_column not in df.columns:
+        raise KeyError(f"Column {date_column} not available in DataFrame")
+    if column not in df.columns:
+        raise KeyError(f"Column {column} not available in Data Frame")
+    if window <= 0:
+        raise ValueError(f"Window size is {window}, must be a positive integer")
+
+    working = df.copy()
+    working[date_column] = pd.to_datetime(working[date_column], errors="coerce")
+    daily = working.groupby(working[date_column].dt.date)[column].sum()
+    daily.index = pd.to_datetime(daily.index)
+    daily = daily.sort_index()
+
+    result = pd.DataFrame({column: daily})
+    result[f"{column}_weighted_moving_avg"] = daily.rolling(
+        window=window, min_periods=1
+    ).apply(_cal_wma, raw=True)
+    return result
+
+
+def _cal_wma(x):
+    weights = np.arange(1, len(x) + 1)
+    return np.sum(x * weights) / np.sum(weights)
