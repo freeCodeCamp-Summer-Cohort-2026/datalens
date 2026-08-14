@@ -26,7 +26,9 @@ def sample_revenue_df():
 
 def test_plot_by_category_writes_png_file(tmp_path, sample_df):
     output_path = tmp_path / "chart.png"
-    result_path = plot_by_category(sample_df, output_path=str(output_path), by="category")
+    result_path = plot_by_category(
+        sample_df, output_path=str(output_path), by="category"
+    )
     assert result_path == str(output_path)
     assert os.path.isfile(output_path)
     assert os.path.getsize(output_path) > 0
@@ -42,3 +44,4 @@ def test_plot_revenue_over_time_writes_png_file(tmp_path, sample_revenue_df):
     assert result_path == str(output_path)
     assert os.path.isfile(output_path)
     assert os.path.getsize(output_path) > 0
+    

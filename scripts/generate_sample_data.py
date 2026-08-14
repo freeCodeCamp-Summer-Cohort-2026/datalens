@@ -21,7 +21,12 @@ STORES = ["Downtown", "Riverside", "Uptown", "Airport"]
 
 # category -> [(item, base_unit_price), ...]
 CATALOG = {
-    "coffee": [("Drip Coffee", 2.75), ("Latte", 4.25), ("Cappuccino", 4.00), ("Espresso", 2.50)],
+    "coffee": [
+        ("Drip Coffee", 2.75),
+        ("Latte", 4.25),
+        ("Cappuccino", 4.00),
+        ("Espresso", 2.50),
+    ],
     "tea": [("Green Tea", 3.00), ("Chai Latte", 4.00), ("Iced Tea", 2.75)],
     "pastry": [("Croissant", 3.25), ("Muffin", 3.00), ("Scone", 3.10)],
     "sandwich": [("Turkey Club", 7.50), ("Veggie Wrap", 6.75), ("BLT", 7.00)],
@@ -91,7 +96,15 @@ def write_csv(rows: list[dict], output_path: str) -> None:
     import csv
 
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-    fieldnames = ["date", "store", "category", "item", "quantity", "unit_price", "revenue"]
+    fieldnames = [
+        "date",
+        "store",
+        "category",
+        "item",
+        "quantity",
+        "unit_price",
+        "revenue",
+    ]
     with open(output_path, "w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
@@ -100,11 +113,15 @@ def write_csv(rows: list[dict], output_path: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--rows", type=int, default=800, help="Number of base rows to generate.")
+    parser.add_argument(
+        "--rows", type=int, default=800, help="Number of base rows to generate."
+    )
     parser.add_argument(
         "--output", type=str, default="data/sample.csv", help="Output CSV path."
     )
-    parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility.")
+    parser.add_argument(
+        "--seed", type=int, default=42, help="Random seed for reproducibility."
+    )
     args = parser.parse_args()
 
     rng = random.Random(args.seed)

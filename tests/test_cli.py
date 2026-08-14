@@ -3,9 +3,8 @@ functions directly in test_cleaning.py / test_analysis.py / test_charts.py -
 these tests just confirm the CLI wiring works end to end.
 """
 
-import os
-
 import json
+import os
 
 import pandas as pd
 from click.testing import CliRunner
@@ -58,80 +57,89 @@ def test_clean_command_smoke(tmp_path):
 
 
 def test_summarize_command_export_json(tmp_path):
-    csv_path=tmp_path/"sample.csv"
-    output_path=tmp_path/"summary.json"
+    csv_path = tmp_path / "sample.csv"
+    output_path = tmp_path / "summary.json"
     _write_sample_csv(str(csv_path))
 
-    runner=CliRunner()
-    result=runner.invoke(cli,[
-        "summarize",
-        str(csv_path),
-        "--by",
-        "category",
-        "--output",
-        str(output_path),
-        "--format",
-        "json",
-    ],)
-    assert result.exit_code==0
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "summarize",
+            str(csv_path),
+            "--by",
+            "category",
+            "--output",
+            str(output_path),
+            "--format",
+            "json",
+        ],
+    )
+    assert result.exit_code == 0
     assert os.path.isfile(output_path)
 
-    with open(output_path,"r",encoding="utf-8") as f:
-        data=json.load(f)
+    with open(output_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
 
     assert "summary" in data
     assert "breakdown" in data
-    assert data["summary"]["row_count"]==3
+    assert data["summary"]["row_count"] == 3
 
 
 def test_summarize_command_export_json_without_by(tmp_path):
-    csv_path=tmp_path/"sample.csv"
-    output_path=tmp_path/"summary_only.json"
+    csv_path = tmp_path / "sample.csv"
+    output_path = tmp_path / "summary_only.json"
     _write_sample_csv(str(csv_path))
-    runner=CliRunner()
-    result=runner.invoke(cli,[
-        "summarize",
-        str(csv_path),
-        "--output",
-        str(output_path),
-        "--format",
-        "json",
-    ],)
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "summarize",
+            str(csv_path),
+            "--output",
+            str(output_path),
+            "--format",
+            "json",
+        ],
+    )
 
-    assert result.exit_code==0
+    assert result.exit_code == 0
     assert os.path.isfile(output_path)
 
-    with open(output_path,"r",encoding="utf-8") as f:
-        data=json.load(f)
-    
+    with open(output_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
     assert "summary" in data
     assert "breakdown" not in data
-    assert data["summary"]["row_count"]==3
-    
+    assert data["summary"]["row_count"] == 3
+
 
 def test_summarize_command_export_csv(tmp_path):
-    csv_path=tmp_path/"sample.csv"
-    output_path=tmp_path/"breakdown.csv"
+    csv_path = tmp_path / "sample.csv"
+    output_path = tmp_path / "breakdown.csv"
     _write_sample_csv(str(csv_path))
-    runner=CliRunner()
-    result=runner.invoke(cli,[
-        "summarize",
-        str(csv_path),
-        "--by",
-        "category",
-        "--output",
-        str(output_path),
-        "--format",
-        "csv",
-    ],)
-    assert result.exit_code==0
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "summarize",
+            str(csv_path),
+            "--by",
+            "category",
+            "--output",
+            str(output_path),
+            "--format",
+            "csv",
+        ],
+    )
+    assert result.exit_code == 0
     assert os.path.isfile(output_path)
 
-    df_out=pd.read_csv(output_path)
+    df_out = pd.read_csv(output_path)
     assert "category" in df_out.columns
     assert "total_revenue" in df_out.columns
 
-    
+
 def test_quality_command_writes_issues(tmp_path):
     csv_path = tmp_path / "quality_sample.csv"
     output_path = tmp_path / "quality_issues.csv"
@@ -156,13 +164,16 @@ def test_quality_command_writes_issues(tmp_path):
     assert issues.loc[0, "quantity"] == -1
     assert "negative_quantity" in issues.loc[0, "issues"]
 
+
 def test_trend_command_smoke(tmp_path):
     csv_path = tmp_path / "sample.csv"
     output_path = tmp_path / "rolling_average_trend.csv"
     _write_sample_csv(str(csv_path))
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["trend", str(csv_path), "--window", "2", "--output", str(output_path)])
+    result = runner.invoke(
+        cli, ["trend", str(csv_path), "--window", "2", "--output", str(output_path)]
+    )
 
     assert result.exit_code == 0
     rolling_average = pd.read_csv(output_path)
@@ -183,16 +194,20 @@ def test_trend_command_invalid_column_error(tmp_path):
     assert result.exit_code != 0
     assert isinstance(result.exception, KeyError)
 
+
 def test_chart_command_line_chart(tmp_path):
     csv_path = tmp_path / "sample.csv"
     output_path = tmp_path / "line_chart.png"
     _write_sample_csv(str(csv_path))
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["chart", str(csv_path), "--kind", "line", "--output", str(output_path)])
+    result = runner.invoke(
+        cli, ["chart", str(csv_path), "--kind", "line", "--output", str(output_path)]
+    )
 
     assert result.exit_code == 0
     assert os.path.isfile(output_path)
+
 
 def test_clean_command_verbose_prints_details(tmp_path):
     csv_path = tmp_path / "sample.csv"
@@ -222,3 +237,82 @@ def test_clean_command_verbose_prints_details(tmp_path):
     assert "Rows with missing values handled: 1" in result.output
     assert "category" in result.output   # column name appears in the affected list
     assert "date" in result.output       # date dtype coercion is reported
+
+
+def test_validate_command_success(tmp_path):
+    csv_path = tmp_path / "valid.csv"
+    df = pd.DataFrame(
+        {
+            "date": ["2026-01-01"],
+            "store": ["Store A"],
+            "category": ["coffee"],
+            "item": ["latte"],
+            "quantity": [2],
+            "unit_price": [3.0],
+            "revenue": [6.0],
+        }
+    )
+    df.to_csv(csv_path, index=False)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["validate", str(csv_path)])
+
+    assert result.exit_code == 0
+    assert "validation passed" in result.output.lower()
+
+
+def test_validate_command_missing_columns(tmp_path):
+    csv_path = tmp_path / "invalid.csv"
+    # sample missing 'store' and 'item' columns
+    df = pd.DataFrame(
+        {
+            "date": ["2026-01-01"],
+            "category": ["coffee"],
+            "quantity": [2],
+            "unit_price": [3.0],
+            "revenue": [6.0],
+        }
+    )
+    df.to_csv(csv_path, index=False)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["validate", str(csv_path)])
+
+    assert result.exit_code != 0
+    assert "missing required columns" in result.output.lower()
+    assert "store" in result.output.lower()
+    assert "item" in result.output.lower()
+
+
+def test_summarize_empty_csv(tmp_path):
+    """Ensure summarizing an empty CSV file (headers only) works cleanly."""
+    csv_path = tmp_path / "empty.csv"
+    pd.DataFrame(columns=["date", "revenue", "quantity"]).to_csv(csv_path, index=False)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["summarize", str(csv_path)])
+
+    assert result.exit_code == 0
+    assert "row_count: 0" in result.output
+
+
+def test_cli_handles_corrupted_file(tmp_path):
+    """Ensure pointing to a corrupted/binary file fails gracefully."""
+    bad_file = tmp_path / "corrupted.csv"
+    bad_file.write_bytes(b"\x00\x01\x02\xff\xfe\xfd")
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["summarize", str(bad_file)])
+
+    assert result.exit_code != 0
+
+
+def test_summarize_invalid_format_flag(tmp_path):
+    """Ensure invalid --format options are rejected by Click."""
+    csv_path = tmp_path / "sample.csv"
+    _write_sample_csv(str(csv_path))
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["summarize", str(csv_path), "--format", "xml"])
+
+    assert result.exit_code != 0
