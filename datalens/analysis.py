@@ -120,3 +120,55 @@ def rolling_average(
     result = pd.DataFrame({column: daily})
     result[f"{column}_rolling_avg"] = daily.rolling(window=window, min_periods=1).mean()
     return result
+
+
+def detect_outliers(
+    df: pd.DataFrame,
+    column: str = "revenue",
+    method: str = "iqr",
+    threshold: float = 1.5,
+) -> pd.DataFrame:
+    """Return rows whosed value in ``column`` is an outlier.
+
+    With ``method="zscore"``, normal distribution in data is assumed
+    and values whose absolute z-score (using the
+    population standard deviation) exceeds ``threshold`` are returned. With
+    ``method="iqr"``, Tukey fences are used: values outside
+    ``Q1 - threshold * IQR`` and ``Q3 + threshold * IQR`` are returned.
+    Missing values are not treated as outliers.
+
+    Only the outlier rows are returned, as a copy with the same columns and
+    index as ``df``. For the conventional IQR multiplier, pass
+    ``threshold=1.5``.
+
+    Raises:
+        KeyError: If ``column`` is not present in ``df``.
+        TypeError: If ``column`` is not numeric.
+        ValueError: If ``method`` is unsupported or ``threshold`` is not
+            positive.
+    """
+    if column not in df.columns:
+        raise KeyError(f"Column {column!r} not found in dataframe.")
+    if not pd.api.types.is_numeric_dtype(df[column]):
+        raise TypeError(f"Column {column!r} must be numeric.")
+    if method not in {"zscore", "iqr"}:
+        raise ValueError("method must be 'zscore' or 'iqr'")
+    if threshold <= 0:
+        raise ValueError("threshold must be positive.")
+
+    values = df[column]
+    if method == "zscore":
+        std = values.std()
+        scores = (
+            (values - values.mean()) / std
+            if std
+            else pd.Series(0.0, index=df.index)
+        )
+        mask = scores.abs() > threshold
+    else:
+        q1 = values.quantile(0.25)
+        q3 = values.quantile(0.75)
+        iqr = q3 - q1
+        mask = (values < q1 - threshold * iqr) | (values > q3 + threshold * iqr)
+
+    return df.loc[mask.fillna(False)].copy()
