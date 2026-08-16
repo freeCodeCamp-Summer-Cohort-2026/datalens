@@ -114,7 +114,7 @@ def rolling_average(
 
     working = df.copy()
     working[date_column] = pd.to_datetime(working[date_column], errors="coerce")
-    daily = working.groupby(working[date_column].dt.date)[column].sum()
+    daily = working.groupby(pd.Grouper(key=date_column, freq="D"))[column].sum()
     daily.index = pd.to_datetime(daily.index)
     daily = daily.sort_index()
 
@@ -134,7 +134,9 @@ REQUIRED_COLUMNS = [
 ]
 
 
-def validate_columns(df: pd.DataFrame, required_columns: list[str] | None = None) -> list[str]:
+def validate_columns(
+    df: pd.DataFrame, required_columns: list[str] | None = None
+) -> list[str]:
     """Return a list of missing columns from df. Returns empty list if all exist."""
     if required_columns is None:
         required_columns = REQUIRED_COLUMNS
@@ -179,7 +181,9 @@ def detect_outliers(
     values = df[column]
     if method == "zscore":
         std = values.std()
-        scores = (values - values.mean()) / std if std else pd.Series(0.0, index=df.index)
+        scores = (
+            (values - values.mean()) / std if std else pd.Series(0.0, index=df.index)
+        )
         mask = scores.abs() > threshold
     else:
         q1 = values.quantile(0.25)
@@ -232,7 +236,9 @@ def weighted_moving_average(
     daily = daily.sort_index()
 
     result = pd.DataFrame({column: daily})
-    result[f"{column}_weighted_moving_avg"] = daily.rolling(window=window, min_periods=1).apply(_cal_wma, raw=True)
+    result[f"{column}_weighted_moving_avg"] = daily.rolling(
+        window=window, min_periods=1
+    ).apply(_cal_wma, raw=True)
     return result
 
 

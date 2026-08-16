@@ -10,3 +10,6 @@ dist/
 *.png
 !notebooks/*.png
 .DS_Store
+data/*100k*.csv
+*.csv
+*.json

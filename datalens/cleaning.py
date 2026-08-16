@@ -111,6 +111,11 @@ def clean_data(
     Returns:
         A cleaned dataframe, or (cleaned_dataframe, details_dict) if verbose is True.
     """
+    if not verbose:
+        result = coerce_types(df, date_column=date_column)
+        result = remove_duplicates(result)
+        result = handle_missing_values(result, strategy=missing_strategy)
+        return result
 
     # 1. Track initial dtypes and coerce types
     before_dtypes = df.dtypes.astype(str).to_dict()
@@ -120,21 +125,22 @@ def clean_data(
     for col, new_dtype in result.dtypes.astype(str).to_dict().items():
         if col in before_dtypes and before_dtypes[col] != new_dtype:
             coerced_columns[col] = f"{before_dtypes[col]} -> {new_dtype}"
+
     # 2. Track duplicates before dropping
     before_dedupe = len(result)
     result = remove_duplicates(result)
     duplicates_removed = before_dedupe - len(result)
+
     # 3. Track missing values before handling
     rows_with_missing = int(result.isna().any(axis=1).sum())
     cols_with_missing = result.columns[result.isna().any()].tolist()
 
     result = handle_missing_values(result, strategy=missing_strategy)
-    if verbose:
-        details = {
-            "duplicates_removed": duplicates_removed,
-            "missing_handled_rows": rows_with_missing,
-            "missing_handled_cols": cols_with_missing,
-            "coerced_dtypes": coerced_columns,
-        }
-        return result, details
-    return result
+
+    details = {
+        "duplicates_removed": duplicates_removed,
+        "missing_handled_rows": rows_with_missing,
+        "missing_handled_cols": cols_with_missing,
+        "coerced_dtypes": coerced_columns,
+    }
+    return result, details
