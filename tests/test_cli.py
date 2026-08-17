@@ -310,3 +310,108 @@ def test_summarize_invalid_format_flag(tmp_path):
     result = runner.invoke(cli, ["summarize", str(csv_path), "--format", "xml"])
 
     assert result.exit_code != 0
+
+
+def _write_outlier_csv(path: str) -> None:
+    """Nine tightly-clustered revenues plus one obvious outlier."""
+    df = pd.DataFrame(
+        {
+            "category": ["coffee"] * 9 + ["tea"],
+            "revenue": [10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 1000.0],
+        }
+    )
+    df.to_csv(path, index=False)
+
+
+def test_outliers_command_writes_outlier_rows(tmp_path):
+    csv_path = tmp_path / "outlier_sample.csv"
+    output_path = tmp_path / "outliers.csv"
+    _write_outlier_csv(str(csv_path))
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["outliers", str(csv_path), "--output", str(output_path)])
+
+    assert result.exit_code == 0
+    assert "Found 1 outlier rows" in result.output
+    found = pd.read_csv(output_path)
+    assert len(found) == 1
+    assert found.loc[0, "revenue"] == 1000.0
+
+
+def test_outliers_command_zscore_method(tmp_path):
+    csv_path = tmp_path / "outlier_sample.csv"
+    output_path = tmp_path / "outliers_zscore.csv"
+    _write_outlier_csv(str(csv_path))
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "outliers",
+            str(csv_path),
+            "--method",
+            "zscore",
+            "--threshold",
+            "2",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "using zscore" in result.output
+    found = pd.read_csv(output_path)
+    assert len(found) == 1
+    assert found.loc[0, "revenue"] == 1000.0
+
+
+def test_outliers_command_threshold_is_honoured(tmp_path):
+    """A wide enough fence must clear the planted outlier, proving --threshold
+    reaches detect_outliers rather than being ignored."""
+    csv_path = tmp_path / "outlier_sample.csv"
+    output_path = tmp_path / "outliers_wide.csv"
+    _write_outlier_csv(str(csv_path))
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["outliers", str(csv_path), "--threshold", "1000", "--output", str(output_path)],
+    )
+
+    assert result.exit_code == 0
+    assert "Found 0 outlier rows" in result.output
+
+
+def test_outliers_command_missing_column_errors_cleanly(tmp_path):
+    csv_path = tmp_path / "outlier_sample.csv"
+    _write_outlier_csv(str(csv_path))
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["outliers", str(csv_path), "--column", "not_a_column"])
+
+    assert result.exit_code != 0
+    assert result.exception.__class__ is SystemExit  # ClickException, not a traceback
+    assert "not found" in result.output.lower()
+
+
+def test_outliers_command_non_numeric_column_errors_cleanly(tmp_path):
+    csv_path = tmp_path / "outlier_sample.csv"
+    _write_outlier_csv(str(csv_path))
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["outliers", str(csv_path), "--column", "category"])
+
+    assert result.exit_code != 0
+    assert "must be numeric" in result.output.lower()
+
+
+def test_outliers_command_rejects_non_positive_threshold(tmp_path):
+    csv_path = tmp_path / "outlier_sample.csv"
+    _write_outlier_csv(str(csv_path))
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["outliers", str(csv_path), "--threshold", "0"])
+
+    assert result.exit_code != 0
+    assert "--threshold" in result.output
+    assert "range x>0" in result.output

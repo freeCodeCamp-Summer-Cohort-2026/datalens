@@ -60,6 +60,10 @@ datalens quality data/sample.csv --output quality_report.csv --tolerance 0.03
 
 # Calculate rolling average trend for a given column
 datalens trend data/sample.csv
+
+# Find outlier rows, via Tukey fences (default) or an absolute z-score
+datalens outliers data/sample.csv --column revenue --output outliers.csv
+datalens outliers data/sample.csv --method zscore --threshold 3
 ```
 
 Run `datalens --help` or `datalens <command> --help` for the full option
