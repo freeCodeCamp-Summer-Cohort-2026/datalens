@@ -35,6 +35,8 @@ def _load_csv(path: str) -> pd.DataFrame:
         return pd.read_csv(path)
     except pd.errors.EmptyDataError as exc:
         raise click.ClickException(f"Input file is empty: {path}") from exc
+    except pd.errors.ParserError as exc:
+        raise click.ClickException(f"Input file is invalid: {path}") from exc
 
 
 @click.group()
