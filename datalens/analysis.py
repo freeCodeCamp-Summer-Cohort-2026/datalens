@@ -42,6 +42,28 @@ def summarize(df: pd.DataFrame) -> dict:
             summary["date_max"] = str(parsed.max().date())
     return summary
 
+def compare_two(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame: 
+    """Compares two computed tables and provides a dataframe of the difference
+    
+    Args: Input dataframe, second input dataframe 
+    
+    Returns: A dataframe with difference between the two dict 
+    """ 
+    table_1 = summarize(df1) 
+    table_2 = summarize(df2) 
+    difference = {} 
+    for key in table_1:
+        if key in table_2:
+            value1 = table_1[key]
+            value2 = table_2[key]
+            if isinstance(value1, (int, float)) and isinstance(value2, (int, float)):
+                difference[key] = {
+                    "Table_1":value1,
+                    "Table_2":value2,
+                    "Difference":(value1-value2)
+                    }
+    df = pd.DataFrame(difference)
+    return df 
 
 def group_by_summary(
     df: pd.DataFrame,
