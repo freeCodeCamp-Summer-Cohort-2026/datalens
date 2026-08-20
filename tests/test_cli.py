@@ -415,3 +415,14 @@ def test_outliers_command_rejects_non_positive_threshold(tmp_path):
     assert result.exit_code != 0
     assert "--threshold" in result.output
     assert "range x>0" in result.output
+
+def test_summarize_sample_size(tmp_path):
+    csv_path = tmp_path / "sample.csv"
+    _write_sample_csv(str(csv_path))
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["summarize", str(csv_path), "--sample-size", "2"])
+
+    assert result.exit_code == 0
+    assert "Estimate" in result.output
+    assert "row_count: 2" in result.output

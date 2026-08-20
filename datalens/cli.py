@@ -63,9 +63,19 @@ def cli() -> None:
     show_default=True,
     help="Output file format when --output is specified.",
 )
-def summarize_cmd(input_csv: str, by: str | None, output: str | None, format: str) -> None:
+@click.option(
+    "--sample-size",
+    default=None,
+    type=click.IntRange(min=1),
+    help="Run the summary on a random sample of N rows instead of the full dataset.",
+)
+def summarize_cmd(input_csv: str, by: str | None, output: str | None, format: str, sample_size: int | None) -> None:
     """Print summary statistics for INPUT_CSV."""
     df = _load_csv(input_csv)
+    if sample_size is not None:
+        sample_size = min(sample_size, len(df))
+        df = df.sample(n=sample_size)
+        click.echo(f"(Estimate based on random sample of {sample_size} rows)")
     summary = summarize(df)
     click.echo("DataLens summary")
     click.echo("=================")

@@ -49,6 +49,9 @@ datalens summarize data/sample.csv
 # ...optionally with a group-by breakdown
 datalens summarize data/sample.csv --by category
 
+# ...optionally with a sample size
+datalens summarize data/sample.csv --sample-size 50
+
 # Save a bar chart of revenue by category (or any other column) as a PNG
 datalens chart data/sample.csv --by category --output chart.png
 
@@ -69,9 +72,9 @@ datalens outliers data/sample.csv --method zscore --threshold 3
 Run `datalens --help` or `datalens <command> --help` for the full option
 list.
 
-## Getting Started 
+## Getting Started
 
-If we were to run the first command of the CLI usage section (`datalens summarize data/sample.csv`), the command will summarise the data within our `sample.csv` file which is in the data directory. 
+If we were to run the first command of the CLI usage section (`datalens summarize data/sample.csv`), the command will summarise the data within our `sample.csv` file which is in the data directory.
 
 In this case, when we run the command, the output will show:
 
@@ -110,15 +113,15 @@ python scripts/generate_sample_data.py --rows 800 --output data/sample.csv --see
 `data/sample.csv` is synthetic - generated, not scraped or sourced from a
 real business - with columns:
 
-| column      | description                                  |
-|-------------|-----------------------------------------------|
-| `date`      | sale date (YYYY-MM-DD)                        |
-| `store`     | store location (Downtown, Riverside, ...)     |
-| `category`  | product category (coffee, tea, pastry, ...)   |
-| `item`      | specific item sold                            |
-| `quantity`  | units sold in that transaction                |
-| `unit_price`| price per unit                                |
-| `revenue`   | `quantity * unit_price`                       |
+| column       | description                                 |
+| ------------ | ------------------------------------------- |
+| `date`       | sale date (YYYY-MM-DD)                      |
+| `store`      | store location (Downtown, Riverside, ...)   |
+| `category`   | product category (coffee, tea, pastry, ...) |
+| `item`       | specific item sold                          |
+| `quantity`   | units sold in that transaction              |
+| `unit_price` | price per unit                              |
+| `revenue`    | `quantity * unit_price`                     |
 
 A small number of rows are intentionally duplicated or missing values, so
 the cleaning functions in `datalens.cleaning` have something real to clean.
