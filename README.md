@@ -72,6 +72,22 @@ datalens outliers data/sample.csv --method zscore --threshold 3
 Run `datalens --help` or `datalens <command> --help` for the full option
 list.
 
+## Command reference
+
+| Command | Required argument | Main options |
+|---|---|---|
+| `summarize` | `INPUT_CSV` | `--by TEXT` — Optional column to also show a group-by breakdown for (e.g. 'category').<br>`--output TEXT` — Path to write the summary/breakdown report to.<br>`--format [csv\|json]` — Output file format when --output is specified. [default: json]<br>`--sample-size INTEGER RANGE` — Run the summary on a random sample of N rows instead of the full dataset. [x>=1] |
+| `chart` | `INPUT_CSV` | `--by TEXT` — Column to group by for the chart. [default: category]<br>`--kind [bar\|line\|top-items]` — Type of chart to generate. [default: bar]<br>`--output TEXT` — Path to write the PNG chart to. [default: chart.png] |
+| `clean` | `INPUT_CSV` | `--output TEXT` — Path to write the cleaned CSV to. [default: cleaned.csv]<br>`--missing-strategy [drop\|fill]` — How to handle missing values. [default: drop]<br>`--verbose` — Print extra details about the cleaning pipeline. |
+| `outliers` | `INPUT_CSV` | `--column TEXT` — Numeric column to scan for outliers. [default: revenue]<br>`--method [iqr\|zscore]` — Detection method: Tukey fences ('iqr') or absolute z-score ('zscore'). [default: iqr]<br>`--threshold FLOAT RANGE` — IQR multiplier, or the z-score cutoff when --method is 'zscore'. [default: 1.5; x>0.0]<br>`--output TEXT` — Path to write the outlier rows to. [default: outliers.csv] |
+| `quality` | `INPUT_CSV` | `--output TEXT` — Path to write the rows with quality issues to. [default: quality_issues.csv]<br>`--tolerance FLOAT RANGE` — Absolute currency tolerance for the revenue check. [default: 0.01; x>=0.0] |
+| `report` | `INPUT_CSV` | `--output TEXT` — Path to write the Markdown report to. [default: report.md] |
+| `trend` | `INPUT_CSV` | `--column TEXT` — Column for which rolling average needs to be calculated. [default: revenue]<br>`--window INTEGER` — Default window size of rolling average. [default: 7]<br>`--date-column TEXT` — Date column to calculate the windows. [default: date]<br>`--output TEXT` — Name of file where rolling average output is stored. [default: rolling_average_trend.csv] |
+| `validate` | `INPUT_CSV` | *(no options besides `--help`)* |
+
+> **Note:** When a new command is added (e.g. `compare`), add a row here with
+> its required argument and main options.
+
 ## Getting Started
 
 If we were to run the first command of the CLI usage section (`datalens summarize data/sample.csv`), the command will summarise the data within our `sample.csv` file which is in the data directory.
